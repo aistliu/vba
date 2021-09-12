@@ -14,8 +14,10 @@ Sub loopSheetLines ()
   Dim StandColor As Integer’基准色，某特定单元格的背景色，用来作为判断的基准色值
   Set sht = ActiveWorkbook.Worksheets(“sheet名”) ‘或者用数字值做参数，表示第几个shhet
   StandColor =  sht.Range("A1").Interior.ColorIndex '得到当前单元格背景色作为循环中的判断标准
-
-  For lineIdx = 3 to 100 ‘知道循环开始结束行号的时候的循环
+  
+  dim lastRow as Integer
+  lastRow = lastRowByCol(sht, 3) 'C列最后一行行号
+  For lineIdx = 3 to lastRowByCol ‘知道循环开始结束行号的时候的循环
     bgColor = sht.Range("A" & lineIdx).Interior.ColorIndex '得到当前单元格背景色
     If bgColor = StandColor Then
       '单元格背景色是某值的时候，
@@ -38,3 +40,12 @@ Sub loopSheetLines ()
     lineIdx = lineIdx + 1 '循环的行加一
   Loop
 End Sub
+'某列的最终行
+Private Function lastRowByCol(ByRef sht As Worksheet, colNum As Integer) As Integer
+    Dim xlLastRow As Long
+    Dim LastRow As Long
+ 
+    xlLastRow = sht.Cells(Rows.Count, 1).Row
+    LastRow = sht.Cells(xlLastRow, colNum).End(xlUp).Row
+    lastRowByCol = LastRow
+End Function
