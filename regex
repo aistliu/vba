@@ -1,0 +1,35 @@
+Sub Sample1()
+    Dim RE, strPattern As String, r As Range
+    Set RE = CreateObject("VBScript.RegExp")
+    strPattern = "SUM\("
+    With RE
+        .Pattern = strPattern       ''検索パターンを設定
+        .IgnoreCase = True          ''大文字と小文字を区別しない
+        .Global = True              ''文字列全体を検索
+        For Each r In ActiveSheet.UsedRange
+            If .Test(r.Formula) Then r.Interior.ColorIndex = 3
+        Next r
+    End With
+    Set RE = Nothing
+End Sub
+
+Sub Sample2()
+    Dim RE, strPattern As String, i As Long, msg As String, reMatch
+    Set RE = CreateObject("VBScript.RegExp")
+    strPattern = "^田(中|口).*(子|美)$"
+    With RE
+        .Pattern = strPattern
+        .IgnoreCase = True
+        .Global = True
+        For i = 1 To 10
+            Set reMatch = .Execute(Cells(i, 1))
+            If reMatch.Count > 0 Then
+                msg = msg & reMatch(0).Value & vbCrLf
+            End If
+        Next i
+    End With
+    MsgBox msg
+    Set reMatch = Nothing
+    Set RE = Nothing
+End Sub
+
