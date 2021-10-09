@@ -1,4 +1,5 @@
-'把Text放入剪贴板
+            
+'把Text放入剪贴板            
 Sub CopyText(Text As String)
     'VBA Macro using late binding to copy text to clipboard.
     'By Justin Kay, 8/15/2014
@@ -10,12 +11,12 @@ Sub CopyText(Text As String)
 End Sub
 '把剪贴板中内容放入到单元格中，如果文本中有换行等，会依次放入单元格的下一个单元格中。
 Sub PasteCell()
- Dim a As String 
- a = "222"
- '把a放入剪贴板
- Call CopyText(a)
- '把剪贴板中的内容放到B2中，如果a中有换行，tab，会放入以B2为起始位置的单元格中
- ActiveWorkbook.Worksheets(1).Range("B2").Select
- ActiveWorkbook.Worksheets(1).Paste
+    Dim a As String
+    a = "222"
+    '把a放入剪贴板
+    Call CopyText(a)
+    '把剪贴板中的内容放到B2中，如果a中有换行，tab，会放入以B2为起始位置的单元格中
+    ActiveWorkbook.Worksheets(1).Range("B2").Select
+    ActiveWorkbook.Worksheets(1).Paste
 End Sub
 
