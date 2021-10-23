@@ -36,7 +36,26 @@ Function searchWB(wb As Workbook, kw As String) As String()
         End If
     Next loopSht
 End Function
-  
+‘行数过多循环很慢，用原装函数过滤后再循环工作表，提高执行速度。
+Sub filterLoop(sht As Worksheet)
+    With sht.UsedRange
+      '过滤列1，查找包含田中11并且包含田中12的行； 过滤列2，查找包含田中20的行； 两列是and关系
+      .AutoFilter Field:=1, Criteria1:="田中11", Operator:=xlOr, Criteria1:="田中12" 
+        .AutoFilter Field:=2, Criteria1:="田中20"
+    End With
+    
+    Dim filterRng As Range
+    ’循环过滤出的行，得到每行的行号
+    For Each filterRng In sht.Range("A2:A" & sht.UsedRange.SpecialCells(xlCellTypeVisible).Row).SpecialCells(xlCellTypeVisible)
+        Dim nowRow As Integer
+        nowRow = filterRng.Row
+        
+    Next filterRng
+    ‘循环过滤出的所有可见单元格
+    For Each filterRng In sht.UsedRange.SpecialCells(xlCellTypeVisible)
+        Debug.Print filterRng.Value
+    Next
+End Sub
 '按行循环工作表中的内容
 Sub loopSheetLines ()
   Dim sht As Worksheet
@@ -69,7 +88,6 @@ Sub loopSheetLines ()
     If InStr(str, "AABB“) >0 Then
       '当字符串中含有AABB的时候的操作
     End If
-    
     lineIdx = lineIdx + 1 '循环的行加一
   Loop
 End Sub
@@ -82,3 +100,23 @@ Private Function lastRowByCol(ByRef sht As Worksheet, colNum As Integer) As Inte
     LastRow = sht.Cells(xlLastRow, colNum).End(xlUp).Row
     lastRowByCol = LastRow
 End Function
+’过滤，拷贝过滤后的某列到另一个工作表中
+Sub copyFilteredCols(shtSrc As Worksheet, shtDes As Worksheet)
+    With sht.UsedRange
+        .AutoFilter Field:=1, Criteria1:="田中11", Operator:=xlOr, Criteria1:="田中12"
+        .AutoFilter Field:=2, Criteria1:="田中20"
+    End With
+    
+    Dim copyCol As Integer
+    copyCol = 2’过滤列号
+    Dim maxRow As Integer‘过滤列的最终行号
+    maxRow = shtSrc.Cells(Rows.Count, copyCol).End(xlUp).Row‘求最终行号
+    ’从第一行到最后一行选中，拷贝
+    shtSrc.Range(Cells(1, copyCol), Cells(maxRow, copyCol)).Select
+    Selection.copy
+    ‘粘贴到目标工作表的第一行第一列（1， 1）为起点单元格的区域，
+    shtDes.Select
+    shtDes.Cells(1, 1).Select
+    shtDes.Paste
+ 
+End Sub
