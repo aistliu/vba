@@ -1,10 +1,42 @@
 Sub 遍历工作表()
-  For Each sh In Worksheets    '数组
-    If sh.Name Like "*" & "表" & "*" Then     '如果工作表名称包含“表”
-    sh.Select
-    Msgbox sh.Name
+  For Each sh In ActiveWorkbooks.Worksheets    '数组
+  If sh.Name Like "*" & "表" & "*" Then     '如果工作表名称包含“表”,则选中并弹出对话框显示表名
+      sh.Select
+      Msgbox sh.Name
+    End if
   Next
 End Sub
+'快速遍历工作簿查询字符串，返回【sheet名：地址】的数组
+Function searchWB(wb As Workbook, kw As String) As String()
+    Dim loopSht As Worksheet'工作簿要遍历的工作表
+    Dim searchRng As Range’工作表中遍历到的单元格
+    Dim rngAddr As String‘单元格地址
+    Dim addrStr As String’保存地址用的字符串，用逗号分割，分割后返回数组， 保存形式为 工作表名：地址
+    
+    For Each loopSht In wb.Worksheets
+        With loopSht.UsedRange
+            Set searchRng = .Cells.Find(What:=kw)‘快速查询工作表中字符串的关键步骤Cells.Find
+            If Not searchRng Is Nothing Then
+                Dim addr
+                addr = searchRng.Address
+                Do
+                    If Len(addr) > 0 Then
+                        addrStr = addrStr & "," & loopSht.Name & ":" & searchRng.Address(ReferenceStyle:=xlA1)  'xlR1C1
+                    Else
+                        addrStr = loopSht.Name & ":" & searchRng.Address(ReferenceStyle:=xlA1)
+                    End If
+                Loop While searchRng.Address <> addr
+            End If
+            
+        End With
+        If InStr(addrStr, ",") > 0 Then
+            searchWB = Split(addrStr, ",")
+        Else
+            searchWB = Null
+        End If
+    Next loopSht
+End Function
+  
 '按行循环工作表中的内容
 Sub loopSheetLines ()
   Dim sht As Worksheet
@@ -22,6 +54,7 @@ Sub loopSheetLines ()
     If bgColor = StandColor Then
       '单元格背景色是某值的时候，
     End If
+      
     
     str = Trim(sht.Range("A" & lineIdx).Value)' 得到A列当前行的值
   Next
