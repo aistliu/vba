@@ -1,3 +1,16 @@
+'返回workbook，如果已经打开，就返回打开的，如果没有打开就打开再返回
+Function getWB(path As String, fileName As String) As Workbook
+    Dim wb1 As Workbook
+    On Error Resume Next
+    
+    Set wb1 = Workbooks(fileName)
+    If Err.Number = 9 Then
+        Set wb1 = Workbooks.Open(path & "\" & fileName)
+    End If
+    Set getWB = wb1
+End Function
+
+
 Sub 遍历工作表()
   For Each sh In ActiveWorkbooks.Worksheets    '数组
   If sh.Name Like "*" & "表" & "*" Then     '如果工作表名称包含“表”,则选中并弹出对话框显示表名
