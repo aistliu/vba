@@ -55,4 +55,35 @@ Sub copyToFilterCol()
         End If
     Next rng
 End Sub
+'当前sheet中的某个关键字，全部变红
+Sub changePartColerInShtRed()
+    On Error Resume Next
+    Dim kw As strng
+    Dim dataObj As New MSForms.DataObject
+    dataObj.GetFromClipboard
+    kw = dataObj.GetText
+    Call changepartColerInSht(kw, 3)'1黑2白3红4绿5蓝6黄
+    kw = ""
+End Sub
+Private Sub changepartColerInSht(kw As String, colorIdx As Integer)
+    Dim r As Range
+    Dim cellV As String
+    Dim pos As Integer
+    
+    For Each r In ActiveSheet.UsedRange
+        cellV = r.Value
+        
+        pos = 1
+        kwLen Len(kw)
+        
+        Do While True
+            pos = InStr(pos, cellV, kw)
+            If pos = 0 Then
+                Exit Do
+            Else
+                r.Characters(Start:=pos, Length:=kwLen).Font.ColorIndex = colorIdx
+            End If
+        Loop
+    Next r
+End Sub
 
