@@ -5,12 +5,22 @@ Function getWB(path As String, fileName As String) As Workbook
     
     Set wb1 = Workbooks(fileName)
     If Err.Number = 9 Then
-        Set wb1 = Workbooks.Open(path & "\" & fileName)
+        Set wb1 = Workbooks.Open(path & "\" & fileName) 'wb1.SaveAs "C:\1.xlsx"换名字保存 
     End If
     Set getWB = wb1
 End Function
-
-
+        
+Private Sub wbMethods()
+    Dim wb As Workbook
+    '打开，关闭工作簿
+    wb = Workbooks.Open("C:\test.xlsx")
+    wb.Close
+    '从模板文件中复制一份，另存为新文件，然后关闭
+    Workbooks.Add ("C:\woshimoban.xlsx")
+    ActiveWorkbook.SaveAs "C:\woshixinwenjian.xlsx"
+    ActiveWorkbook.Close savechanges:=True
+End Sub
+        
 Sub 遍历工作表()
   For Each sh In ActiveWorkbooks.Worksheets    '数组
   If sh.Name Like "*" & "表" & "*" Then     '如果工作表名称包含“表”,则选中并弹出对话框显示表名
@@ -49,26 +59,27 @@ Function searchWB(wb As Workbook, kw As String) As String()
         End If
     Next loopSht
 End Function
-‘行数过多循环很慢，用原装函数过滤后再循环工作表，提高执行速度。
-Sub filterLoop(sht As Worksheet)
+‘过滤后再按行循环，速度快
+Private Sub loopFilterRows()
+    Dim sht As Worksheet
+    Set sht = ActiveSheet
+    '过滤，过滤A列中有XXX，或者YYY的，同时B列中有ZZZ的
     With sht.UsedRange
-      '过滤列1，查找包含田中11并且包含田中12的行； 过滤列2，查找包含田中20的行； 两列是and关系
-      .AutoFilter Field:=1, Criteria1:="田中11", Operator:=xlOr, Criteria1:="田中12" 
-        .AutoFilter Field:=2, Criteria1:="田中20"
+        .AutoFilter Filed:=1, Criteria1:="XXX", Operator:=xlOr, Criteria1:="YYY"
+        .AutoFilter Filed:=2, Criteria1:="ZZZ"
     End With
-    
-    Dim filterRng As Range
-    ’循环过滤出的行，得到每行的行号
-    For Each filterRng In sht.Range("A2:A" & sht.UsedRange.SpecialCells(xlCellTypeVisible).Row).SpecialCells(xlCellTypeVisible)
-        Dim nowRow As Integer
-        nowRow = filterRng.Row
-        
-    Next filterRng
-    ‘循环过滤出的所有可见单元格
-    For Each filterRng In sht.UsedRange.SpecialCells(xlCellTypeVisible)
-        Debug.Print filterRng.Value
-    Next
+                    
+    Dim r As Range
+    Dim lastRow As Long
+    Dim tmpRowNo As Long
+    lastRow = sht.UsedRange.SpecialCells(xlCllTypeLastCell).Row
+    '只循环过滤出来的行
+    For Each r In sht.Range("A2:A" & lastRow).SpecialCells(xlCellTypeVisible)
+        tmpRowNo = r.Row'当前行号，
+        sht.Cells(tmpRowNo, 1)= "填入内容"
+    Next r
 End Sub
+            
 '按行循环工作表中的内容
 Sub loopSheetLines ()
   Dim sht As Worksheet
@@ -109,7 +120,7 @@ Private Function lastRowByCol(ByRef sht As Worksheet, colNum As Integer) As Inte
     Dim xlLastRow As Long
     Dim LastRow As Long
  
-    xlLastRow = sht.Cells(Rows.Count, 1).Row
+    xlLastRow = sht.Cells(Rows.Count, 1).Row'1:第一列
     LastRow = sht.Cells(xlLastRow, colNum).End(xlUp).Row
     lastRowByCol = LastRow
 End Function
