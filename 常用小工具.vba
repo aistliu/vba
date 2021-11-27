@@ -30,4 +30,29 @@ Sub chaihange()
         End If
     Next
 End Sub
+'在筛选后的列中，按照当前的行顺序拷贝进去，新拷贝进入的数据以当前行为准
+Sub copyToFilterCol()
+    On Error Resume Next
+    '需要以下的参照设定（工具->引用）Microsoft Forms 2.0 Object Library｡如果没有需要以下文件 c:\Windows\System32\FM20.DLL
+    Dim dataObj As New MSForms.DataObject
+    dataObj.GetFromClipboard
+    kw = dataObj.GetText
+    
+    Dim clipArr() As String
+    clipArr = Split(kw, vbCrLf)
+    
+    Dim rng As Range
+    Dim i As Integer
+    i = 0
+    
+    Dim offsetRow As Integer
+    offsetRow = ActiveSheet.UsedRange.SpecialCells(xlCellTypeLastCell).Row
+    For Each rng In ActiveSheet.Range(ActiveCell, ActiveCell.Offset(100000, 0)).SpecialCells(xlCellTypeVisible)
+        rng = Replace(clipArr(i), """", "")
+        i = i + 1
+        If i > UBound(clipArr) Then
+            Exit For
+        End If
+    Next rng
+End Sub
 
