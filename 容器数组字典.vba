@@ -21,6 +21,14 @@ End Sub
 Private Function merge(arr1, arr2)
     merge = Split(Join(arr1, ",") & "," & Join(arr2, ","), ",")
 End Function
+'判断数组为空，声明后未初始化
+Function isNull(arr) As Boolean
+    isNull = False
+    On Error Resume Next
+    If (UBound(arr)) < 0 Then
+        isNull = True
+    End If
+End Function
 ‘数组中元素存在判断
 Private Function exists(arr, item) As Boolean
     exites = False
@@ -48,5 +56,4 @@ Sub dic()
   If dic.Exists("a") Then
     'key存在判断
   End If
-
 End Sub
