@@ -1,5 +1,5 @@
 '递归取得文件夹下所有文件路径名list，存入传入的数组
-Private Sub getFolderFilesList(pth As String, arr() As String)
+Private Sub getFolderFilesList(pth As String, doSubFolder As Boolean, arr() As String)
     Dim fName
     fName = Dir(pth & "\*.*") '获取文件下的第一个文件名（不含路径），不限扩展名
     
@@ -8,16 +8,20 @@ Private Sub getFolderFilesList(pth As String, arr() As String)
         If fName <> "" Then
             ReDim Preserve arr(UBound(arr) + 1)
         End If
-        fName = Dir'获取文件下的次一个文件名
+        fName = Dir '获取文件下的次一个文件名
     Loop
     
-    Dim fso, folder
- 'fso主要方法，fso.path, fso.files/获取该路径下所有文件名子文件夹名　fso.FileExsts(path)/文件存在否，返回true/false
-    Set fso = CreateObject("Scripting.FileSystemObject").getFolder(pth)
-    For Each folder In fso.SubFlders
-        Call getFolderFilesList(folder.Path, arr)
-    Next folder
+'递归查找子文件夹
+    If doSubFolder Then
+       Dim fso, folder
+    'fso主要方法，fso.path, fso.files/获取该路径下所有文件名子文件夹名　fso.FileExsts(path)/文件存在否，返回true/false
+       Set fso = CreateObject("Scripting.FileSystemObject").getFolder(pth)
+       For Each folder In fso.SubFlders
+           Call getFolderFilesList(folder.Path, doSubFolder, arr)’递归子文件夹
+       Next folder
+    Next
 End Sub
+
 '读入文件路径名，返回该文件的文本---＞
 Function fileTxt(path As String)
     Dim encode As String
