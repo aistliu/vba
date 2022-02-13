@@ -1,14 +1,16 @@
 
 Private Declare Sub Sleep Lib "kernel32" (ByVal ms as Long )'sleep lib
-Private Const SPSTR As String = "@@#$*@@"
+    Private Const SPSTR As String = "@@#$*@@" '分隔符
 'workbook,sheet-------------------------->
+'col列的最后一行的行号，中间可以有空行
 Function maxR(sh As Worksheet, col As Integer)
     maxR = sh.Cells(Rows.Count, col).End(xlUp).Row
 End Function
+'r行的最后一列的列号
 Function maxC(sh As Worksheet, r As Integer)
     maxC = sh.Cells(r, Columns.Count).End(xlToLeft).Column
 End Function
-'get workbook
+'get workbook 知道xls文件的地址，返回workbook对象， readOnlyFlg，是否以只读方式打开
 Function getWB(filePath, Optional readOnlyFlg As Boolean = False) As Workbook
     Application.DisplayAlerts = False
     Application.AskToUpdateLinks = False
@@ -29,7 +31,7 @@ Function getWB(filePath, Optional readOnlyFlg As Boolean = False) As Workbook
     Application.DisplayAlerts = True
     Application.AskToUpdateLinks = True
 End Function
-
+'从模板xls文件生成一个新的xls文件
 Sub copyFromTemplateXls(templateFilePath, newFileNamePath)
     Application.DisplayAlerts = False
     Application.AskToUpdateLinks = False
@@ -41,7 +43,7 @@ Sub copyFromTemplateXls(templateFilePath, newFileNamePath)
     Application.DisplayAlerts = True
     Application.AskToUpdateLinks = True
 End Sub
-
+'快速查找关键字是否在sheet中，利用find查找速度快
 Function shtHasKeyword(sht As Worksheet, kw As String) As Boolean
     shtHasKeyword = False
     Dim r As Range
@@ -53,13 +55,14 @@ Function shtHasKeyword(sht As Worksheet, kw As String) As Boolean
         End If
     End With
 End Function
+'删除过滤后的行
 Sub deleteFilterRows(sht As Worksheet, colCo As Integer, filterKW As String)
     With sht.UsedRange
         .AutoFilter Field:=colCo, criterial1:=filterKW
     End With
     sht.UsedRange.Offset(1, 0).Resize(sht.UsedRange.Rows.Count - 1).Rows.Delete
 End Sub
-'da xiao xie tong yiaBc,aBc,ABC, AbC,ABc..=> aBc
+'如果一个sheet中的单词大小写不统一，将其统一，统一标准为第一个遇到的写法。aBc,aBc,ABC, AbC,ABc..=> aBc
 Sub unityStrInSht(sht As Worksheet)
     Dim i, j, arr, tmp
     Dim dic As New Dictionary
@@ -82,7 +85,8 @@ Sub unityStrInSht(sht As Worksheet)
 End Sub
 'workbook,sheet--------------------------<
 
-'Array-------------------------->
+'Array------------数组 数组 数组 数组 数组 数组 数组-------------->
+'数组是否为空
 Function arrIsNull(arr) As Boolean
     arrIsNull = False
     On Error Resume Next
@@ -90,6 +94,7 @@ Function arrIsNull(arr) As Boolean
         arrIsNull = True
     End If
 End Function
+'数组中是否存在某值
 Function arrExists(arr, item) As Boolean
     arrExists = False
     Dim i
@@ -105,6 +110,7 @@ ErrorHandler:
         arrExists = False
     End If
 End Function
+'数组中移除某值
 Sub arrRemove(arr, item)
     arr = Filter(arr, item, False)
 End Sub
@@ -118,12 +124,14 @@ Sub arrAdd(arr, item)
             arr(UBound(arr)) = item
         End If
 End Sub
+'合并两个数组，返回合并后的数组
 Function arrMerge(arr1, arr2)
     If arrIsNull(arr1) Then
         arrMerge = arr2
     Else
         arrMerge = Split(Join(arr1, SPSTR) & SPSTR & Join(arr2, SPSTR), SPSTR)
 End Function
+'数组中移除重复的值
 Function arrRemoveDuplicate()
     Dim d As New Dictionary
     For Each i In arr
@@ -142,16 +150,19 @@ Function arrRemoveDuplicate()
     Next k
     arrRemoveDuplicate = ret
 End Function
-'Array--------------------------<
-'File--------------------------------->
+'Array-------------数组 数组 数组 数组 数组 数组 数-------------<
+'File---------------文件 文件 文件 文件 文件 文件 文件 ------------------>
+'得到fso对象
 Private Function getFso() As Object
     Dim fso
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set getFso = fso
 End Function
+'文件拷贝，源文件地址srcPath，新文件地址desPath
 Sub FileCopy(srcPath, desPath)
     FileCopy srcPath, desPath
 End Sub
+'递归获取文件夹下的所有文件。（如果里面有Arxhive文件夹，忽略此文件夹）searchSub：是否检索子文件夹， arr：检索后结果存放的数组
 Sub getFilesList(folderPath As String, searchSub As Boolean, arr() As String)
     Dim fname
     fname = Dir(folderPath & "\*.*")
@@ -174,7 +185,7 @@ Sub getFilesList(folderPath As String, searchSub As Boolean, arr() As String)
         Set fso = CreateObject("Scripting.FileSystemObject").GetFolder(folderPath)
         Dim folder
         For Each folder In fso.SubFolders
-            If InStr(folder, "Arxhive") <= 0 Then
+            If InStr(folder, "Arxhive") <= 0 Then     '有Arxhive文件夹的时候，忽略此文件夹
                 Call getFilesList(folder.path, searchSub, arr)
             Else
                 Debug.Print " Aechive folder:" & folder
@@ -182,11 +193,13 @@ Sub getFilesList(folderPath As String, searchSub As Boolean, arr() As String)
         Nextfolder
     End If
 End Sub
+'得到文件的扩展名
 Function getFileExt(filePath As String)
     Dim fso As Object
     Set fso = getFso()
     getFileExt = fso.GetExtensionName(filePath)
 End Function
+'文件是否存在
 Function FileExists(filePath As String) As Boolean
     Dim str As String
     str = ""
@@ -199,6 +212,7 @@ Function FileExists(filePath As String) As Boolean
         FileExists = True
     End If
 End Function
+'文件是否存在的另一种写法
 Function FileExists2(filePath As String) As Boolean
     Dim fso As Object
     Set fso = getFso()
@@ -210,12 +224,14 @@ Function FileExists2(filePath As String) As Boolean
         End If
     End With
 End Function
+'得到文本的行数
 Function txtLineCount(fp As String) As Long
     Dim fso As Object
     Set fso = getFso
     txtLineCount = fso.OpenTextFile(FileName:=fp, IOMode:=8).Line
     Set fso = Nothing
 End Function
+'从路径中获取文件名
 Function fileNameFromPath(path As String)
     Dim ret As String
     If Len(path) > 0 Then
@@ -224,11 +240,13 @@ Function fileNameFromPath(path As String)
         fileNameFromPath = ret
     End If
 End Function
+'文件的修改时间
 Function fileLastModifiedTime(f)
     Dim fso As Object
     Set fso = getFso
     fileLastModifiedTime = fso.GetFile(f).DateLasModified
 End Function
+'从文本路径中的到文本的内容
 Function fileTxt(path As String)
     Dim cs As String
     cs = fncGetCharset(path)
@@ -249,6 +267,7 @@ Function fileTxt(path As String)
     fileTxt = buffer
     Set stream = Nothing
 End Function
+'文本路径中得到文本内容，按行读取
 Function fileTxtByLine(path As String)
     Dim txt As String
     Dim tmpTxt As String
@@ -264,12 +283,14 @@ Function fileTxtByLine(path As String)
         fileTxtByLine = txt
     End If
 End Function
+'写文件，把str写入path
 Sub wirteTxt(path As String, str As String)
     Open path For Output As #2
     Print #2, str
     Print #2, "other word...."
     Close #2
 End Sub
+'返回文本文件的编码格式
 Function fncGetCharset(FileName As String) As String
     Dim i                   As Long     '?用指数
        
@@ -420,7 +441,8 @@ Function fncGetCharset(FileName As String) As String
     '判定不能
     fncGetCharset = "UNKNOWN"
 End Function
-
+'sleep等待文件被产生，可用于等待sheel执行结束，sheel最后一行写一个生成结束标志文件，判断此文件是否存在，如果存在就是执行完毕
+                            '结束标志文件 copy /y NUL C:\overflg.txt >NUL
 Sub waitFileUntilFileIsCreate(filePath As String)
     Dim hasFile As Boolean
     hasFile = False
@@ -432,8 +454,9 @@ Sub waitFileUntilFileIsCreate(filePath As String)
     'Kill filePath ' if need, delete this file
 End Sub
 
-'File---------------------------------<
-'regexp------------------------------------------------------------------------->
+'File--------------文件 文件 文件 文件 文件 文件 文件 文件 -------------------<
+'regexp------------正则 正则 正则 正则 正则 正则 正则 正则 正则 正则 ------------------------------------------------------------->
+'正则判断是否在str中存在re
 Function regExists(src As String, re As String) As Boolean
     regExists = False
     Dim reg As Object
@@ -448,7 +471,7 @@ Function regExists(src As String, re As String) As Boolean
         regExists = True
     End If
 End Function
-
+'检索字符串中是否存在re，存在就返回检索到的文字列数组
 Function regFind(src As String, re As String) As String()
     Dim ret() As Strin
     Dim reg As Object
@@ -471,7 +494,7 @@ Function regFind(src As String, re As String) As String()
     End If
     regFind = ret
 End Function
-
+'正则替换
 Function regReplace(sr As String, oldStrReg As String, newStr As String) As String
     Dim reg As Object
     Set reg = CreateObject("vbscript.regexp")
@@ -483,7 +506,7 @@ Function regReplace(sr As String, oldStrReg As String, newStr As String) As Stri
     ret = reg.Replace(src, newStr)
     replaceReg = CStr(ret)
 End Function
-'regexp-------------------------------------------------------------------------<
+'regexp------------正则 正则 正则 正则 正则 正则 正则 正则 -------------------------------------------------------------<
 'shell---------------------------------------------->
 ' run xxx.bat
 Private Sub exeShell(batFile As String)
@@ -496,17 +519,19 @@ End Sub
 'shell---------------------------------------------->
 
 'windows----------------------------------------------------------->
-' put txt to clipboard
+' 把字符串txt放入到剪贴板
 Sub SetStrToClipboard(txt As String)
     Dim msobj
     Set msobj = CreateObject("new:{IC3B4210-F441-11CE-B9EA-00AA006B1A69}")
     msobj.SetText txt
     msobj.PutInClipboard
 End Sub
-'get txt from clipboard
+'从剪贴板中取出内容
 Function getStrFromClipboard() As String
     Dim dataObj As New MSForms.DataObject
     dataObj.GetFromClipboard
     getStrFromClipboard = dataObj.GetText
 End Function
 'windows-----------------------------------------------------------<
+
+
