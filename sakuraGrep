@@ -1,0 +1,52 @@
+根据sakura命令行执行方式写的批处理执行，多个关键字grep
+sakura命令行各个参数参考：https://sakura-editor.github.io/help/HLP000109.html
+１．multiGrep.bat
+メインとなるバッチファイルです。
+
+@echo off
+rem 遅延環境変数を設定
+setlocal ENABLEDELAYEDEXPANSION
+rem ====== 設定ファイル読み込み ======
+for /f "tokens=1,2* delims==" %%i in (config.txt) do ( 
+    set KEY=%%i
+    if not "!KEY:~0,1!"=="#" (
+        set %%i=%%j
+    )
+)
+rem ====== 実行 ======
+echo 開始 > %OUTFILE%
+rem 検索キーワード読み込み
+for /f %%i in (keyword.txt) do (
+    echo キーワード：%%i >> %OUTFILE%
+    rem ダブルクォーテーションのエスケープ
+    set KEYWORD=%%i
+    set KEYWORD=!KEYWORD:%BEFORE_STRING%=%AFTER_STRING%!
+    %SAKURA% -GREPMODE -GFOLDER=%GFOLDER% -GOPT=%GOPT% -GFILE=%GFILE% -GCODE=%GCODE% -GKEY="!KEYWORD!" >> %OUTFILE%
+)
+echo 終了 >> %OUTFILE%
+ポイントは21行目の置換処理です。ここでは、検索キーワードにダブルクォーテーション「”」が含まれている場合、サクラエディタの仕様に沿って、二重のダブルクォーテーション「””」に変換しています。
+
+２．config.txt
+このファイルは検索時の条件を指定する設定ファイルです。
+
+-- 検索対象のフォルダを指定
+GFOLDER="C:\wk"
+-- 検索対象のファイル名パターンを指定　*.*は全ファイルを対象
+GFILE="*.*"
+-- 正規表現を使用する場合は「R」を追加する。※「U」は必ず付ける。
+GOPT="SPUH"
+-- 検索文字コード「99」は文字コード自動判別
+GCODE="99"
+-- 検索結果ファイル名
+OUTFILE="result.txt"
+-- サクラエディタコマンドラインオプション
+-- 詳細はhttps://sakura-editor.github.io/help/HLP000109.html参照
+-- サクラエディタのパス
+SAKURA="C:\Program Files (x86)\sakura\sakura.exe"
+-- 制御用文字
+BEFORE_STRING=^"
+AFTER_STRING=^"^"
+各設定値はコメント行（–で始まる行）を見てください。
+
+３．keyword.txt
+このファイルに検索するキーワードを指定してください。複数行指定することが可能です。
