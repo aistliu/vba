@@ -1,0 +1,138 @@
+
+'把剪贴板中的内容粘贴到过滤后的行中，过滤后的行会忽略，不会粘贴到其中，所见到的行才会粘贴，微软不提供此功能
+Sub copyToFilterMutiCol_M1()
+    On Error Resume Next
+    Application.ScreenUpdating = False
+    
+    Dim dateObj As New MSForms.DataObject
+    dataObj.GetFromClipboard
+    kw = dataObj.GetText
+    
+    Dim clipArr() As String
+    Dim i As Integer
+    
+    If InStr(clipArr(0), vbTab) > 0 Then
+        colCnt = UBound(Split(clipArr(0), vbTab))
+        
+        Dim allStr As String
+        For i = 0 To UBound(clipArr)
+            If i = 0 Then
+                allStr = clipArr(i)
+            Else
+                allStr = allStr & vbTab & clipArr(i)
+            End If
+        Next
+        copyArr = Split(allStr, vbTab)
+    Else
+        colCnt = 0
+        copyArr = clipArr
+    End If
+    
+    Dim rng As Range
+    
+    i = 0
+    For Each rng In ActiveSheet.Range(ActiveCell, ActiveCell.Offset(ActiveSheet.UsedRange.SpecialCells(xlCellTypeLastCell).Row, colCnt)).SpecialCells(xlCellTypeVisible)
+        rng = Replace(copyArr(i), """", "")
+        i = i + 1
+        If i > UBound(copyArr) Then
+            Exit For
+        End If
+    Next rng
+    
+    Application.ScreenUpdating = True
+End Sub
+'多列过滤，如果过滤值特别多，手工选择太麻烦，把要过滤的东西写入一个sheet，指明过滤信息，执行此macro，自动过滤完毕
+Sub mutiKwFilterj_M2()
+    Dim sh As Worksheet
+    Set sh = ActiveWorkbook.Worksheets("F")
+    Dim d As Dictionary
+    Set d = getFilterInfo(sh)
+    Call filterByArray(d, ActiveWorkbook)
+End Sub
+'如果sheet中有剪贴板中的文字，就变红。可以把cell中的文字列的局部文字变红
+Sub partStrRed_M3()
+    On Error Resume Next
+    Dim kw As String
+    Dim dataObj As New MSForms.DataObject
+    
+    dataObj.GetFromClipboard
+    kw = dataObj.GetText
+    
+    Call changeStrPartCol(kw, 3) ' 3: red, 1: black
+End Sub
+'从存放过滤信息的sheet中得到过滤的信息，放入字典。
+Private Function getFilterInfo(sh As Worksheet) As Dictionary
+    Dim retD As New Dictionary
+    arr = sh.UsedRange.Value
+    
+    For j = 1 To UBound(arr, 2)
+        shName = arr(1, j)
+        rng = arr(2, j)
+        tmpFilterVal = ""
+        
+        If Len(shName) = 0 Or Len(rng) = 0 Then
+            Exit For
+        End If
+        
+        For i = 3 To UBound(arr, 1)
+            If Len(arr(i, j)) > 0 Then
+                If i = 3 Then
+                    tmpFilterVal = arr(i, j)
+                Else
+                    tmpFilterVal = tmpFilterVal & "|@$|" & arr(i, j)
+                End If
+            End If
+        Next
+        
+        retD.add shName & "|" & rng, Split(tmpFilterVal, "|@$|")
+        
+    Next
+    Set getFilterInfo = retD
+End Function
+'autoFilter by Array
+Private Sub filterByArray(fd As Dictionary, wb As Workbook)
+    Dim sh As Worksheet
+    For Each k In fd
+        Set sh = wb.Worksheets(Split(k, "|")(0))
+        Exit For
+    Next k
+    
+    Dim rngAdd As String
+    Dim fCol As Integer
+    
+    For Each k In fd
+        rngAddr = Split(k, "|")(1)
+        If InStr(rngAddr, ",") > 0 Then
+            fCol = Split(rngAddr, ",")(1)
+            rngAddr = Split(rngAddr, , "")(0)
+        Else
+            fCol = sh.Range(rngAddr).Column
+        End If
+        sh.Range(rngAddr).AutoFilter fCol, fd(k), xlFilterValues
+    Next k
+End Sub
+'变颜色，并且加重字体
+'kw要变色的字符串，colorIdx 色索引，1黑3红。。。
+Private Sub changeStrPartCol(kw As String, colorIdx As Integer)
+    Dim r As Range
+    Dim cellV As String
+    Dim pos As Integer
+    
+    For Each r In ActiveSheet.UsedRange
+        cellV = r.Value
+        
+        pos = 1
+        kwLen = Len(kw)
+        
+        Do While True
+            pos = InStr(pos, cellV, kw)
+            If pos = 0 Then
+                Exit Do
+            Else
+                r.Characters(Start:=pos, Length:=kwLen).Font.ColorIndex = colorIdx
+                r.Characters(Start:=pos, Length:=kwLen).Font.Bold = True '  B font
+                pos = pos + kwLen
+        Loop
+    Next r
+End Sub
+
